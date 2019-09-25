@@ -395,6 +395,27 @@ class ParameterItem extends HTMLLIElement {
   }
 }
 
+class FileOutput extends HTMLDivElement {
+  constructor() {
+    super();
+    this.setAttribute("is", "file-output");
+  }
+
+  connectedCallback() {
+    let filename = this.getAttribute("filename");
+    let heading = this.appendChild(document.createElement("h2"));
+    heading.appendChild(document.createTextNode(filename));
+    let copyButton = heading.appendChild(document.createElement("button"));
+    copyButton.textContent = "Copy";
+    copyButton.onclick = () => {
+      textArea.select();
+      document.execCommand("copy");
+    }
+    let textArea = this.appendChild(document.createElement("textarea"));
+    textArea.id = filename.replace(".", "-");
+  }
+}
+
 customElements.define("id-input", IdInput, { extends: "input" });
 customElements.define("primitive-select", PrimitiveSelect, { extends: "select" });
 customElements.define("type-list", TypeList, { extends: "ul" });
@@ -405,3 +426,4 @@ customElements.define("event-list", EventList, { extends: "ul" });
 customElements.define("event-item", EventItem, { extends: "li" });
 customElements.define("parameter-list", ParameterList, { extends: "ul" });
 customElements.define("parameter-item", ParameterItem, { extends: "li" });
+customElements.define("file-output", FileOutput, { extends: "div" });

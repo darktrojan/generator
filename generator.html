@@ -25,21 +25,9 @@
     <button id="make-output">Make output</button>
   </div>
   <div id="right">
-    <h2>
-      manifest.json:
-      <button onclick="document.getElementById('manifest-json').select(); document.execCommand('copy');">Copy</button>
-    </h2>
-    <textarea id="manifest-json"></textarea>
-    <h2>
-      schema.json:
-      <button onclick="document.getElementById('schema-json').select(); document.execCommand('copy');">Copy</button>
-    </h2>
-    <textarea id="schema-json"></textarea>
-    <h2>
-      implementation.js:
-      <button onclick="document.getElementById('implementation-js').select(); document.execCommand('copy');">Copy</button>
-    </h2>
-    <textarea id="implementation-js"></textarea>
+    <div is="file-output" filename="manifest.json"></div>
+    <div is="file-output" filename="schema.json"></div>
+    <div is="file-output" filename="implementation.js"></div>
   </div>
 </body>
 </html>
