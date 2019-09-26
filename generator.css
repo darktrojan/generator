@@ -59,6 +59,16 @@ label > span {
   display: inline-block;
   width: 11ch;
 }
+#make-output {
+  background-color: #090;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  height: 30px;
+  line-height: 30px;
+  padding: 0;
+  border: none;
+}
 div[is="file-output"] {
   flex-grow: 1;
   display: flex;
