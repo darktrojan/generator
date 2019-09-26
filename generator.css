@@ -2,7 +2,7 @@ html {
   display: flex;
   flex-direction: column;
   height: 100%;
-  --margin-size: 12px;
+  font-family: arial, sans-serif;
 }
 body {
   display: flex;
@@ -15,19 +15,49 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 25%;
-  margin-block: var(--margin-size);
-  margin-inline-start: var(--margin-size);
+  margin-block: 12px;
+  margin-inline-start: 12px;
 }
 #left_top {
   flex-grow: 1;
   overflow: auto;
-  margin-block-end: var(--margin-size);
+  margin-block-end: 12px;
 }
 #right {
-  margin: var(--margin-size);
+  margin: 12px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+}
+h1, h2 {
+  margin: 0;
+}
+h2:not(:first-child),
+div:not(:first-child)[is="file-output"] > h2 {
+  margin-block-start: 12px;
+}
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+li {
+  background: #ccc;
+  padding: 4px;
+}
+li:not(:first-child) {
+  margin-top: 4px;
+}
+li > ul > li {
+  background: #fff;
+}
+label {
+  display: block;
+  padding: 1px;
+}
+label > span {
+  display: inline-block;
+  width: 11ch;
 }
 div[is="file-output"] {
   flex-grow: 1;
@@ -36,4 +66,30 @@ div[is="file-output"] {
 }
 textarea {
   flex-grow: 1;
+}
+
+.add-button,
+.remove-button {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 100%;
+  opacity: 0.5;
+}
+.add-button:hover,
+.remove-button:hover {
+  opacity: 1;
+}
+.add-button {
+  margin-block: 2px;
+  margin-inline-start: 4px;
+  background-color: #090;
+  color: #fff;
+}
+.remove-button {
+  float: right;
+  background-color: #c00;
+  color: #fff;
 }

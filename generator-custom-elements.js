@@ -1,3 +1,9 @@
+function createLabel(label) {
+  let nameLabel = document.createElement("label");
+  nameLabel.appendChild(document.createElement("span")).appendChild(document.createTextNode(label));
+  return nameLabel;
+}
+
 class IdInput extends HTMLInputElement {
   constructor() {
     super();
@@ -85,7 +91,12 @@ class TypeSelect extends HTMLSelectElement {
         types.push(`$ref:${type.id}`);
       }
     }
-    types.push("boolean", "integer", "string", "object", "$ref:extensionTypes.Date");
+    types.push(
+      "boolean", "integer", "string", "object",
+      "$ref:extensionTypes.Date",
+      "$ref:folders.MailFolder",
+      "$ref:messages.MessageHeader", "$ref:messages.MessageList"
+    );
 
     while (this.lastElementChild) {
       this.lastElementChild.remove();
@@ -110,14 +121,10 @@ class TypeList extends HTMLUListElement {
   constructor() {
     super();
     this.setAttribute("is", "type-list");
-
-    let addButton = this.appendChild(document.createElement("li")).appendChild(document.createElement("button"));
-    addButton.textContent = "+";
-    addButton.onclick = () => this.addType();
   }
 
   addType() {
-    this.insertBefore(document.createElement("li", { is: "type-item" }), this.lastElementChild);
+    this.appendChild(document.createElement("li", { is: "type-item" }));
   }
 
   get types() {
@@ -142,8 +149,15 @@ class TypeItem extends HTMLLIElement {
     super();
     this.setAttribute("is", "type-item");
 
-    let nameLabel = this.appendChild(document.createElement("label"));
-    nameLabel.appendChild(document.createTextNode("name:"));
+    let removeButton = this.appendChild(document.createElement("button"));
+    removeButton.classList.add("remove-button");
+    removeButton.textContent = "-";
+    removeButton.onclick = () => {
+      this.remove();
+      TypeSelect.updateAll();
+    }
+
+    let nameLabel = this.appendChild(createLabel("name:"));
     this.nameControl = nameLabel.appendChild(document.createElement("input", { is: "id-input" }));
     this.nameControl.onchange = (event) => {
       TypeSelect.updateAll({
@@ -153,24 +167,17 @@ class TypeItem extends HTMLLIElement {
       this._oldTypeName = this.typeName;
     };
 
-    this.appendChild(document.createElement("br"));
-
-    let descriptionLabel = this.appendChild(document.createElement("label"));
-    descriptionLabel.appendChild(document.createTextNode("description:"));
+    let descriptionLabel = this.appendChild(createLabel("description:"));
     this.descriptionControl = descriptionLabel.appendChild(document.createElement("input"));
 
-    this.appendChild(document.createElement("br"));
-    this.appendChild(document.createElement("label")).textContent = "parameters:";
+    let propLabel = this.appendChild(createLabel("properties:"));
+    let propAddButton = propLabel.appendChild(document.createElement("button"));
+    propAddButton.classList.add("add-button");
+    propAddButton.textContent = "+";
+    propAddButton.onclick = () => this.propList.addParam();
 
-    this.paramList = this.appendChild(document.createElement("ul", { is: "parameter-list" }));
-    this.paramList.classList.add("object");
-
-    let removeButton = this.appendChild(document.createElement("button"));
-    removeButton.textContent = "-";
-    removeButton.onclick = () => {
-      this.remove();
-      TypeSelect.updateAll();
-    }
+    this.propList = this.appendChild(document.createElement("ul", { is: "parameter-list" }));
+    this.propList.classList.add("object");
   }
 
   connectedCallback() {
@@ -191,7 +198,7 @@ class TypeItem extends HTMLLIElement {
       id: this.typeName,
       type: "object",
       description: this.typeDescription || undefined,
-      properties: this.paramList.schema,
+      properties: this.propList.schema,
     };
   }
 }
@@ -200,14 +207,10 @@ class FunctionList extends HTMLUListElement {
   constructor() {
     super();
     this.setAttribute("is", "function-list");
-
-    let addButton = this.appendChild(document.createElement("li")).appendChild(document.createElement("button"));
-    addButton.textContent = "+";
-    addButton.onclick = () => this.addFunction();
   }
 
   addFunction() {
-    this.insertBefore(document.createElement("li", { is: "function-item" }), this.lastElementChild);
+    this.appendChild(document.createElement("li", { is: "function-item" }));
   }
 
   get functions() {
@@ -232,24 +235,24 @@ class FunctionItem extends HTMLLIElement {
     super();
     this.setAttribute("is", "function-item");
 
-    let nameLabel = this.appendChild(document.createElement("label"));
-    nameLabel.appendChild(document.createTextNode("name:"));
-    this.nameControl = nameLabel.appendChild(document.createElement("input", { is: "id-input" }));
-
-    this.appendChild(document.createElement("br"));
-
-    let descriptionLabel = this.appendChild(document.createElement("label"));
-    descriptionLabel.appendChild(document.createTextNode("description:"));
-    this.descriptionControl = descriptionLabel.appendChild(document.createElement("input"));
-
-    this.appendChild(document.createElement("br"));
-    this.appendChild(document.createElement("label")).textContent = "parameters:";
-
-    this.paramList = this.appendChild(document.createElement("ul", { is: "parameter-list" }));
-
     let removeButton = this.appendChild(document.createElement("button"));
+    removeButton.classList.add("remove-button");
     removeButton.textContent = "-";
     removeButton.onclick = () => this.remove();
+
+    let nameLabel = this.appendChild(createLabel("name:"));
+    this.nameControl = nameLabel.appendChild(document.createElement("input", { is: "id-input" }));
+
+    let descriptionLabel = this.appendChild(createLabel("description:"));
+    this.descriptionControl = descriptionLabel.appendChild(document.createElement("input"));
+
+    let paramLabel = this.appendChild(createLabel("parameters:"));
+    let paramAddButton = paramLabel.appendChild(document.createElement("button"));
+    paramAddButton.classList.add("add-button");
+    paramAddButton.textContent = "+";
+    paramAddButton.onclick = () => this.paramList.addParam();
+
+    this.paramList = this.appendChild(document.createElement("ul", { is: "parameter-list" }));
   }
 
   connectedCallback() {
@@ -288,7 +291,7 @@ class FunctionItem extends HTMLLIElement {
 
 class EventList extends FunctionList {
   addFunction() {
-    this.insertBefore(document.createElement("li", { is: "event-item" }), this.lastElementChild);
+    this.appendChild(document.createElement("li", { is: "event-item" }));
   }
 }
 
@@ -315,10 +318,6 @@ class ParameterList extends HTMLUListElement {
   constructor() {
     super();
     this.setAttribute("is", "parameter-list");
-
-    let addButton = this.appendChild(document.createElement("li")).appendChild(document.createElement("button"));
-    addButton.textContent = "+";
-    addButton.onclick = () => this.addParam();
   }
 
   get isObject() {
@@ -326,7 +325,7 @@ class ParameterList extends HTMLUListElement {
   }
 
   addParam() {
-    this.insertBefore(document.createElement("li", { is: "parameter-item" }), this.lastElementChild);
+    this.appendChild(document.createElement("li", { is: "parameter-item" }));
   }
 
   get parameters() {
@@ -359,31 +358,24 @@ class ParameterItem extends HTMLLIElement {
     super();
     this.setAttribute("is", "parameter-item");
 
-    let nameLabel = this.appendChild(document.createElement("label"));
-    nameLabel.appendChild(document.createTextNode("name:"));
-    this.nameControl = nameLabel.appendChild(document.createElement("input", { is: "id-input" }));
-
-    this.appendChild(document.createElement("br"));
-
-    let descriptionLabel = this.appendChild(document.createElement("label"));
-    descriptionLabel.appendChild(document.createTextNode("description:"));
-    this.descriptionControl = descriptionLabel.appendChild(document.createElement("input"));
-
-    this.appendChild(document.createElement("br"));
-
-    let typeLabel = this.appendChild(document.createElement("label"));
-    typeLabel.appendChild(document.createTextNode("type:"));
-    this.typeControl = typeLabel.appendChild(document.createElement("select", { is: "type-select" }));
-    this.typeControl.onchange = () => this.paramTypeChanged();
-
-    let optionalLabel = this.appendChild(document.createElement("label"));
-    this.optionalControl = optionalLabel.appendChild(document.createElement("input"));
-    this.optionalControl.setAttribute("type", "checkbox");
-    optionalLabel.appendChild(document.createTextNode("optional"));
-
     let removeButton = this.appendChild(document.createElement("button"));
+    removeButton.classList.add("remove-button");
     removeButton.textContent = "-";
     removeButton.onclick = () => this.remove();
+
+    let nameLabel = this.appendChild(createLabel("name:"));
+    this.nameControl = nameLabel.appendChild(document.createElement("input", { is: "id-input" }));
+
+    let descriptionLabel = this.appendChild(createLabel("description:"));
+    this.descriptionControl = descriptionLabel.appendChild(document.createElement("input"));
+
+    let optionalLabel = this.appendChild(createLabel("optional:"));
+    this.optionalControl = optionalLabel.appendChild(document.createElement("input"));
+    this.optionalControl.setAttribute("type", "checkbox");
+
+    let typeLabel = this.appendChild(createLabel("type:"));
+    this.typeControl = typeLabel.appendChild(document.createElement("select", { is: "type-select" }));
+    this.typeControl.onchange = () => this.paramTypeChanged();
   }
 
   connectedCallback() {
@@ -410,9 +402,17 @@ class ParameterItem extends HTMLLIElement {
   paramTypeChanged() {
     if (this.typeControl.valueType == "object") {
       if (!this.objectDetailsList) {
-        this.objectDetailsList = this.appendChild(document.createElement("ul", { is: "parameter-list" }));
-        this.objectDetailsList.classList.add("object");
-        this.objectDetailsList.addParam();
+        this.objectDetailsList = this.appendChild(document.createElement("div"));
+
+        let propLabel = this.objectDetailsList.appendChild(createLabel("properties:"));
+        let propAddButton = propLabel.appendChild(document.createElement("button"));
+        propAddButton.classList.add("add-button");
+        propAddButton.textContent = "+";
+        propAddButton.onclick = () => propList.addParam();
+
+        let propList = this.objectDetailsList.appendChild(document.createElement("ul", { is: "parameter-list" }));
+        propList.classList.add("object");
+        propList.addParam();
       }
     } else if (this.objectDetailsList) {
       this.objectDetailsList.remove();
@@ -432,7 +432,7 @@ class ParameterItem extends HTMLLIElement {
     } else {
       obj.type = this.typeControl.valueType;
       if (this.typeControl.valueType == "object") {
-        obj.properties = this.objectDetailsList.schema;
+        obj.properties = this.objectDetailsList.lastElementChild.schema;
       }
     }
     if (this.typeControl.valueIsArray) {
@@ -460,7 +460,7 @@ class FileOutput extends HTMLDivElement {
   connectedCallback() {
     let filename = this.getAttribute("filename");
     let heading = this.appendChild(document.createElement("h2"));
-    heading.appendChild(document.createTextNode(filename));
+    heading.appendChild(document.createTextNode(`${filename}:`));
     let copyButton = heading.appendChild(document.createElement("button"));
     copyButton.textContent = "Copy";
     copyButton.onclick = () => {

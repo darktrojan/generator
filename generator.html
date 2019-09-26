@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title></title>
+  <title>WebExtension Experiment generator</title>
   <link rel="stylesheet" href="generator.css" type="text/css"/>
   <script src="generator-custom-elements.js" type="text/javascript"></script>
   <script src="generator.js" type="text/javascript" defer=""></script>
@@ -15,11 +15,11 @@
         name:
         <input type="text" id="api-name" is="id-input" value="myapi"/>
       </label>
-      <h2>types:</h2>
-      <ul id = "type-list" is="type-list"></ul>
-      <h2>functions:</h2>
+      <h2>types:<button class="add-button" onclick="document.getElementById('type-list').addType();">+</button></h2>
+      <ul id="type-list" is="type-list"></ul>
+      <h2>functions:<button class="add-button" onclick="document.getElementById('function-list').addFunction();">+</button></h2>
       <ul id="function-list" is="function-list"></ul>
-      <h2>events:</h2>
+      <h2>events:<button class="add-button" onclick="document.getElementById('event-list').addFunction();">+</button></h2>
       <ul id="event-list" is="event-list"></ul>
     </div>
     <button id="make-output">Make output</button>
