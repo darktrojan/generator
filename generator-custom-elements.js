@@ -32,27 +32,77 @@ class IdInput extends HTMLInputElement {
   }
 }
 
-class PrimitiveSelect extends HTMLSelectElement {
+class TypeSelect extends HTMLSelectElement {
+  static updateAll(change) {
+    [...document.querySelectorAll('select[is="type-select"]')].forEach(select => {
+      if (change) {
+        select.change(change.from, change.to);
+      } else {
+        select.update();
+      }
+    });
+  }
+
   constructor() {
     super();
-    this.setAttribute("is", "primitive-select");
+    this.setAttribute("is", "type-select");
+    this.setAttribute("required", "true");
 
-    this.appendChild(document.createElement("option")).textContent = "boolean";
-    this.appendChild(document.createElement("option")).textContent = "integer";
-    this.appendChild(document.createElement("option")).textContent = "string";
-    this.appendChild(document.createElement("option")).textContent = "object";
-    this.appendChild(document.createElement("option")).textContent = "array of boolean";
-    this.appendChild(document.createElement("option")).textContent = "array of integer";
-    this.appendChild(document.createElement("option")).textContent = "array of string";
-    this.appendChild(document.createElement("option")).textContent = "array of object";
+    this.update();
   }
 
   get valueType() {
-    return this.value.substring(this.value.lastIndexOf(" ") + 1);
+    return this.value.replace("$ref:", "").replace("[]", "");
   }
 
-  get valueTypeIsArray() {
-    return this.value.startsWith("array of ");
+  get valueIsReference() {
+    return this.value.startsWith("$ref:");
+  }
+
+  get valueIsArray() {
+    return this.value.endsWith("[]");
+  }
+
+  change(changeFrom, changeTo) {
+    for (let option of this.options) {
+      if (option.value == `$ref:${changeFrom}`) {
+        option.textContent = changeTo;
+        option.value = `$ref:${changeTo}`;
+      } else if (option.value == `$ref:${changeFrom}[]`) {
+        option.textContent = `array of ${changeTo}`;
+        option.value = `$ref:${changeTo}[]`;
+      }
+    }
+  }
+
+  update() {
+    let value = this.value;
+
+    let types = [];
+    let typeSchema = document.getElementById("type-list").schema;
+    if (typeSchema) {
+      for (let type of typeSchema) {
+        types.push(`$ref:${type.id}`);
+      }
+    }
+    types.push("boolean", "integer", "string", "object", "$ref:extensionTypes.Date");
+
+    while (this.lastElementChild) {
+      this.lastElementChild.remove();
+    }
+
+    for (let type of types) {
+      let option = this.appendChild(document.createElement("option"))
+      option.textContent = type.replace("$ref:", "");
+      option.value = type;
+    }
+    for (let type of types) {
+      let option = this.appendChild(document.createElement("option"))
+      option.textContent = `array of ${type.replace("$ref:", "")}`;
+      option.value = `${type}[]`;
+    }
+
+    this.value = value;
   }
 }
 
@@ -95,6 +145,13 @@ class TypeItem extends HTMLLIElement {
     let nameLabel = this.appendChild(document.createElement("label"));
     nameLabel.appendChild(document.createTextNode("name:"));
     this.nameControl = nameLabel.appendChild(document.createElement("input", { is: "id-input" }));
+    this.nameControl.onchange = (event) => {
+      TypeSelect.updateAll({
+        from: this._oldTypeName,
+        to: this.typeName,
+      });
+      this._oldTypeName = this.typeName;
+    };
 
     this.appendChild(document.createElement("br"));
 
@@ -110,19 +167,19 @@ class TypeItem extends HTMLLIElement {
 
     let removeButton = this.appendChild(document.createElement("button"));
     removeButton.textContent = "-";
-    removeButton.onclick = () => this.remove();
+    removeButton.onclick = () => {
+      this.remove();
+      TypeSelect.updateAll();
+    }
   }
 
   connectedCallback() {
-    this.typeName = "type" + ([...this.parentNode.children].indexOf(this) + 1);
+    this._oldTypeName = this.nameControl.value = "type" + ([...this.parentNode.children].indexOf(this) + 1);
+    TypeSelect.updateAll();
   }
 
   get typeName() {
     return this.nameControl.value;
-  }
-
-  set typeName(value) {
-    this.nameControl.value = value;
   }
 
   get typeDescription() {
@@ -316,7 +373,7 @@ class ParameterItem extends HTMLLIElement {
 
     let typeLabel = this.appendChild(document.createElement("label"));
     typeLabel.appendChild(document.createTextNode("type:"));
-    this.typeControl = typeLabel.appendChild(document.createElement("select", { is: "primitive-select" }));
+    this.typeControl = typeLabel.appendChild(document.createElement("select", { is: "type-select" }));
     this.typeControl.onchange = () => this.paramTypeChanged();
 
     let optionalLabel = this.appendChild(document.createElement("label"));
@@ -346,10 +403,6 @@ class ParameterItem extends HTMLLIElement {
     return this.descriptionControl.value;
   }
 
-  get paramType() {
-    return this.typeControl.valueType;
-  }
-
   get paramOptional() {
     return this.optionalControl.checked;
   }
@@ -373,13 +426,16 @@ class ParameterItem extends HTMLLIElement {
       description: this.paramDescription || undefined,
       optional: this.paramOptional || undefined,
     }
-    let obj = {
-      type: this.paramType,
-    };
-    if (this.paramType == "object") {
-      obj.properties = this.objectDetailsList.schema;
+    let obj = {};
+    if (this.typeControl.valueIsReference) {
+      obj["$ref"] = this.typeControl.valueType;
+    } else {
+      obj.type = this.typeControl.valueType;
+      if (this.typeControl.valueType == "object") {
+        obj.properties = this.objectDetailsList.schema;
+      }
     }
-    if (this.typeControl.valueTypeIsArray) {
+    if (this.typeControl.valueIsArray) {
       return {
         ...result,
         type: "array",
@@ -417,7 +473,7 @@ class FileOutput extends HTMLDivElement {
 }
 
 customElements.define("id-input", IdInput, { extends: "input" });
-customElements.define("primitive-select", PrimitiveSelect, { extends: "select" });
+customElements.define("type-select", TypeSelect, { extends: "select" });
 customElements.define("type-list", TypeList, { extends: "ul" });
 customElements.define("type-item", TypeItem, { extends: "li" });
 customElements.define("function-list", FunctionList, { extends: "ul" });
