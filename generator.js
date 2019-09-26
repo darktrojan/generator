@@ -3,6 +3,7 @@ document.getElementById("make-output").onclick = () => {
   let manifest = {
     manifest_version: 2,
     name: "Extension containing an experimental API",
+    version: "1",
     experiment_apis: {
       [apiName]: {
         schema: "schema.json",
@@ -36,7 +37,9 @@ document.getElementById("make-output").onclick = () => {
         ${functions.join(",\n        ")}
       `;
   }
-  document.getElementById("implementation-js").value = `var ${apiName} = class extends ExtensionCommon.ExtensionAPI {
+  document.getElementById("implementation-js").value = `var { ExtensionCommon } = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+
+var ${apiName} = class extends ExtensionCommon.ExtensionAPI {
   getAPI(context) {
     return {
       ${apiName}: {${implementation}}

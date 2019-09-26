@@ -334,9 +334,6 @@ class ParameterList extends HTMLUListElement {
 
   get schema() {
     let parameters = this.parameters;
-    if (parameters.length == 0) {
-      return undefined;
-    }
     if (this.isObject) {
       let properties = {};
       parameters.forEach(param => {
