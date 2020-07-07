@@ -58,7 +58,11 @@ class TypeSelect extends HTMLSelectElement {
   }
 
   get valueType() {
-    return this.value.replace("$ref:", "").replace("[]", "");
+    return this.value.replace("$native:", "").replace("$ref:", "").replace("[]", "");
+  }
+
+  get valueIsNativeType() {
+    return this.value.startsWith("$native:");
   }
 
   get valueIsReference() {
@@ -93,9 +97,14 @@ class TypeSelect extends HTMLSelectElement {
     }
     types.push(
       "boolean", "integer", "string", "object",
+      "$native:ArrayBuffer",
+      "$native:File",
+      "$native:ImageData",
       "$ref:extensionTypes.Date",
       "$ref:folders.MailFolder",
-      "$ref:messages.MessageHeader", "$ref:messages.MessageList"
+      "$ref:messages.MessageHeader",
+      "$ref:messages.MessageList",
+      "$ref:tabs.Tab",
     );
 
     while (this.lastElementChild) {
@@ -104,12 +113,12 @@ class TypeSelect extends HTMLSelectElement {
 
     for (let type of types) {
       let option = this.appendChild(document.createElement("option"))
-      option.textContent = type.replace("$ref:", "");
+      option.textContent = type.replace("$native:", "").replace("$ref:", "");
       option.value = type;
     }
     for (let type of types) {
       let option = this.appendChild(document.createElement("option"))
-      option.textContent = `array of ${type.replace("$ref:", "")}`;
+      option.textContent = `array of ${type.replace("$native:", "").replace("$ref:", "")}`;
       option.value = `${type}[]`;
     }
 
@@ -424,7 +433,11 @@ class ParameterItem extends HTMLLIElement {
       optional: this.paramOptional || undefined,
     }
     let obj = {};
-    if (this.typeControl.valueIsReference) {
+    if (this.typeControl.valueIsNativeType) {
+      obj.type = "object";
+      obj.isInstanceOf = this.typeControl.valueType;
+      obj.additionalProperties = true;
+    } else if (this.typeControl.valueIsReference) {
       obj["$ref"] = this.typeControl.valueType;
     } else {
       obj.type = this.typeControl.valueType;
