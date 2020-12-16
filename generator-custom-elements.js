@@ -147,10 +147,6 @@ class TypeList extends HTMLUListElement {
     }
     return this.types.map(type => type.schema);
   }
-
-  get implementation() {
-    return this.types.map(type => type.implementation).join(",\n        ");
-  }
 }
 
 class TypeItem extends HTMLLIElement {
@@ -308,7 +304,7 @@ class EventItem extends FunctionItem {
   get implementation() {
     return `${this.funcName}: new ExtensionCommon.EventManager({
           context,
-          name: "myapi.${this.funcName}",
+          name: "${apiName}.${this.funcName}",
           register(fire) {
             // function callback(event) {
             //   return fire.async(${this.paramList.implementation});

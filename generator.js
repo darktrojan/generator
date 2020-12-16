@@ -1,5 +1,7 @@
+let apiName;
+
 document.getElementById("make-output").onclick = () => {
-  let apiName = document.getElementById("api-name").value;
+  apiName = document.getElementById("api-name").value;
   let manifest = {
     manifest_version: 2,
     name: "Extension containing an experimental API",
